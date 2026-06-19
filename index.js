@@ -169,9 +169,6 @@ app.post("/api/jobs", async (req, res) => {
   }
 });
 
-/**
- * 🚀 GET: Fetch a single job by its specific Database ID (Flexible Format)
- */
 app.get("/api/jobs/:id", async (req, res) => {
   try {
     if (!db)
@@ -181,10 +178,8 @@ app.get("/api/jobs/:id", async (req, res) => {
 
     const { id } = req.params;
 
-    // Search for exactly what you manually typed in Atlas
     const searchConditions = [{ _id: id }];
 
-    // Also search for auto-generated ObjectIds
     if (ObjectId.isValid(id)) {
       searchConditions.push({ _id: new ObjectId(id) });
     }
@@ -201,6 +196,35 @@ app.get("/api/jobs/:id", async (req, res) => {
   } catch (error) {
     console.error("❌ MongoDB Fetch Error:", error);
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * 🚀 POST: Pure Simple Direct Injection Job Application
+ * Captures absolutely every field sent by the frontend form without filtering.
+ */
+app.post("/api/applications", async (req, res) => {
+  try {
+    if (!db) {
+      return res
+        .status(500)
+        .json({ success: false, error: "Database not initialized" });
+    }
+
+    // Displays the full incoming payload right inside your terminal window
+    console.log("-----------------------------------------");
+    console.log("📥 Data arrived safely at server:", req.body);
+    console.log("-----------------------------------------");
+
+    // Grab req.body completely and drop it straight into MongoDB Atlas
+    const result = await db.collection("applications").insertOne(req.body);
+
+    return res
+      .status(201)
+      .json({ success: true, insertedId: result.insertedId });
+  } catch (error) {
+    console.error("💥 Server Error:", error);
+    return res.status(500).json({ success: false, error: error.message });
   }
 });
 
